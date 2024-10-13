@@ -1,5 +1,6 @@
 package com.example.springsecurityjwt.config;
 
+import com.example.springsecurityjwt.jwt.JWTUtil;
 import com.example.springsecurityjwt.jwt.LoginFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -18,8 +19,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    // AuthenticationManager 가 인자로 받을 AuthenticationConfiguration 객체 생성자 주입
+    // LoginFilter 의 AuthenticationManager 가 인자로 받을 AuthenticationConfiguration 주입
     private final AuthenticationConfiguration authenticationConfiguration;
+    // LoginFilter 가 인자로 받을 JWTUtil 주입
+    private final JWTUtil jwtUtil;
 
     @Bean // AuthenticationManager Bean 등록
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
@@ -53,7 +56,7 @@ public class SecurityConfig {
 
         // UsernamePasswordAuthenticationFilter 자리를 대체
         http
-                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration)), UsernamePasswordAuthenticationFilter.class);
+                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
         http
                 .sessionManagement((session) -> session
