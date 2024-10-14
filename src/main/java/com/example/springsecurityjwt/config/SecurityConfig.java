@@ -1,5 +1,6 @@
 package com.example.springsecurityjwt.config;
 
+import com.example.springsecurityjwt.jwt.JWTFilter;
 import com.example.springsecurityjwt.jwt.JWTUtil;
 import com.example.springsecurityjwt.jwt.LoginFilter;
 import lombok.RequiredArgsConstructor;
@@ -54,6 +55,9 @@ public class SecurityConfig {
                         .requestMatchers("/admin").hasRole("ADMIN")
                         .anyRequest().authenticated()); // Authorization by path
 
+        // LoginFilter 앞에 등록
+        http
+                .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
         // UsernamePasswordAuthenticationFilter 자리를 대체
         http
                 .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
