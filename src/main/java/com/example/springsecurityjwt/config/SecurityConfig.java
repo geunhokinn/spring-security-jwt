@@ -3,6 +3,7 @@ package com.example.springsecurityjwt.config;
 import com.example.springsecurityjwt.jwt.JWTFilter;
 import com.example.springsecurityjwt.jwt.JWTUtil;
 import com.example.springsecurityjwt.jwt.LoginFilter;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +15,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -39,6 +44,33 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
+        http
+                .cors((cors) -> cors
+                        .configurationSource(new CorsConfigurationSource() {
+
+                            @Override
+                            public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
+
+                                CorsConfiguration corsConfiguration = new CorsConfiguration();
+
+                                // 허용할 클라이언트의 도메인을 설정
+                                corsConfiguration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+                                // 클라이언트 요청에서 허용할 HTTP 메서드를 설정
+                                corsConfiguration.setAllowedMethods(Collections.singletonList("*"));
+                                // 클라이언트 요청에서 인증 정보 전달 허용
+                                corsConfiguration.setAllowCredentials(true);
+                                // 클라이언트 요청에서 허용할 헤더를 설정
+                                corsConfiguration.setAllowedHeaders(Collections.singletonList("*"));
+                                // CORS 설정이 브라우저에서 캐시되는 시간 설정
+                                corsConfiguration.setMaxAge(3600L);
+
+                                // 서버에서 클라이언트로 허용할 응답 헤더를 설정합니다.
+                                corsConfiguration.setExposedHeaders(Collections.singletonList("Authorization"));
+
+                                return corsConfiguration;
+                            }
+                        }));
 
         http
                 .csrf((auth) -> auth.disable()); // Disable CSRF
