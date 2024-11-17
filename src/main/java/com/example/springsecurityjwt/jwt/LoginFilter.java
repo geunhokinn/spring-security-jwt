@@ -1,7 +1,10 @@
 package com.example.springsecurityjwt.jwt;
 
 import com.example.springsecurityjwt.dto.CustomUserDetails;
+import com.example.springsecurityjwt.dto.LoginDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +14,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.util.StreamUtils;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -28,8 +34,24 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
 
         // 클라이언트 요청에서 username, password 추출
-        String username = obtainUsername(request);
-        String password = obtainPassword(request);
+//        String username = obtainUsername(request);
+//        String password = obtainPassword(request);
+
+        // json method
+        LoginDTO loginDTO;
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            ServletInputStream inputStream = request.getInputStream();
+            String messageBody = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
+            loginDTO = objectMapper.readValue(messageBody, LoginDTO.class);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        String username = loginDTO.getUsername();
+        String password = loginDTO.getPassword();
 
         // spring security 에서 username 과 password 를 검증하기 위해서는 token 에 담아야 함, dto 처럼 담아서 넘겨주기, 마지막은 role
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password, null);
