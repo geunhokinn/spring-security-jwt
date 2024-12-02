@@ -85,6 +85,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/login", "/", "/join").permitAll()
                         .requestMatchers("/admin").hasRole("ADMIN")
+                        .requestMatchers("reissue").permitAll()
                         .anyRequest().authenticated()); // Authorization by path
 
         // LoginFilter 앞에 등록
