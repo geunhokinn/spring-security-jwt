@@ -1,7 +1,8 @@
 package com.example.springsecurityjwt.jwt;
 
-import com.example.springsecurityjwt.dto.CustomUserDetails;
 import com.example.springsecurityjwt.dto.LoginDTO;
+import com.example.springsecurityjwt.entity.RefreshEntity;
+import com.example.springsecurityjwt.repository.RefreshRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletInputStream;
@@ -21,6 +22,7 @@ import org.springframework.util.StreamUtils;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 
 @RequiredArgsConstructor
@@ -30,6 +32,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
     // 토큰을 발급받기 위해 JWTUtil 주입
     private final JWTUtil jwtUtil;
+
+    // refresh token 을 삭제하고 조회하기 위해 RefreshRepository 주입
+    private final RefreshRepository refreshRepository;
 
     // form login 을 disable 했기 때문에 직접 구현
     @Override
@@ -99,10 +104,23 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String access = jwtUtil.createJwt("access", username, role, 600000L);
         String refresh = jwtUtil.createJwt("refresh", username, role, 86400000L);
 
+        // Refresh 토큰 저장
+        addRefreshEntity(username, refresh, 86400000L);
+
         // 응답 생성
         response.setHeader("access", access);
         response.addCookie(createCookie("refresh", refresh));
         response.setStatus(HttpStatus.OK.value());
+    }
+
+    // 저장소에 refreshToken 을 저장하는 method
+    private void addRefreshEntity(String username, String refresh, Long expiredMs) {
+        // expireMs 는 만료 시간 -> Date 를 통해 날짜 만들기
+        Date date = new Date(System.currentTimeMillis() + expiredMs);
+
+        RefreshEntity refreshEntity = RefreshEntity.buildRefreshEntity(username, refresh, date.toString());
+
+        refreshRepository.save(refreshEntity);
     }
 
     // 로그인 실패 시 실행하는 method
